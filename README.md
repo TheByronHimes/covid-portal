@@ -1,5 +1,5 @@
-<h1>FastAPI & MongoDB Template with React</h1>
-Use this to quickly start a single-page app with FastAPI and MongoDB through Docker.
+<h1>COVID-19 Sample Portal - Microservice Redo</h1>
+Powered by Docker-Compose, Kafka, FastAPI, React, and Python.
 <br>
 <h2>Instructions</h2>
 <ol>
@@ -10,7 +10,8 @@ Use this to quickly start a single-page app with FastAPI and MongoDB through Doc
 <li>When you build the docker image file, it will pull in your authentication values and bake them in the image while keeping them out of your repo.
 <li>Make sure you have Docker Desktop installed, then open a terminal and navigate to the repo folder.
 <li>Build the image/run the containers with "docker-compose up --build".
-<li>Open your browser and navigate to 127.0.0.1:8000, and you should see {"msg":"Hello World!"}
+<li>Open your browser and navigate to 127.0.0.1:8000, and you should see the COVID-19 sample portal.
 </ol>
 
-You can build out the application from there.
+<h2>Coming Soon:</h2>
+<p>Complete documentation</p>
