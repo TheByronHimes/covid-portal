@@ -13,7 +13,6 @@ from fastapi.templating import Jinja2Templates
 from pymongo import MongoClient
 from svcKafka.kafkaservice import KafkaService
 
-
 # Import DB Username & Password from container env vars
 DB_USERNAME = os.environ["db_username"]
 DB_PASSWORD = os.environ["db_password"]
@@ -28,6 +27,7 @@ client = MongoClient(
     host="mongodb://db:27017", username=DB_USERNAME, password=DB_PASSWORD
 )
 
+
 # Set up the FastAPI entrypoint
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="./static"), name="static")
@@ -36,10 +36,10 @@ templates = Jinja2Templates(directory="./templates")
 # Set up kafka service (currently only able to produce)
 ks = KafkaService(BOOTSTRAP_SERVERS, CLIENT_ID)
 ks.add_new_topic(TOPIC_NAME)
-x = ks.produce_simple_message(TOPIC_NAME, 'test message')
+#x = ks.produce_simple_message(TOPIC_NAME, 'test message')
 
 #consumer = KafkaConsumer(group_id=None, bootstrap_servers=BOOTSTRAP_SERVERS, auto_offset_reset='earliest')#,request_timeout_ms=5000, session_timeout_ms=3000)
-#consumer.subscribe(topics=[TOPIC_NAME])
+#consumer.subscribe(topics=[TOPIC_NAME]) 
 
 def findSample(*args):
     raise NotImplementedError
