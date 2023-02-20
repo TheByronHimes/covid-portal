@@ -6,7 +6,29 @@ Contents:
 
 """
 
-from typing import Protocol, Mapping, Any, List
+from typing import Protocol, Mapping, Any, List, Type, Enum
+from pydantic import BaseModel
+
+
+class Dto(BaseModel):
+     """ Base class for a DTO """
+
+class PcrTest(Dto):
+    """ Simple DTO for the PCR tests """
+    #TODO: proper validation on the date/email fields
+    #TODO: proper enumeration on status and test result fields
+    sample_id: int
+    patient_pseudonym: str
+    submitter_email: str
+    collection_date: str = ''
+    access_token: str = ''
+    status: str = ''
+    test_result: str = ''
+    test_date: str = ''
+
+
+# TODO: write a dto for updating the pcr with test results
+
 
 class Dao(Protocol):
     """
@@ -30,7 +52,7 @@ class MongoDao:
     """ A DAO Implementation specifically for MongoDB """
     # TODO: Create DTO Class
     # TODO: Update type-hint for dto_type
-    def __init__(self, dto_type, collection, key_field):
+    def __init__(self, dto_type: Type[Dto], collection, key_field):
         """
         TODO: Pretty sure I need to do something with a session here so
         MongoDbDao isn't relying on the existing session in main.py, but I'll

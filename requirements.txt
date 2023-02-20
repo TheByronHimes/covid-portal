@@ -1,3 +1,4 @@
+pytest
 fastapi[all]
 uvicorn
 pymongo
