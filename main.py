@@ -22,10 +22,6 @@ TOPIC_NAME = 'nutopic'
 BOOTSTRAP_SERVERS = ['broker:29092']
 CLIENT_ID = 'client1'
 
-# Create connection to DB
-client = MongoClient(
-    host="mongodb://db:27017", username=DB_USERNAME, password=DB_PASSWORD
-)
 
 
 # Set up the FastAPI entrypoint
