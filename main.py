@@ -13,16 +13,11 @@ from pymongo import MongoClient
 from svcKafka.kafkaservice import KafkaService
 from src.api import router
 
-# Import DB Username & Password from container env vars
-DB_USERNAME = os.environ["db_username"]
-DB_PASSWORD = os.environ["db_password"]
 
 # TODO: move this to a proper config file or something
 TOPIC_NAME = 'nutopic'
 BOOTSTRAP_SERVERS = ['broker:29092']
 CLIENT_ID = 'client1'
-
-
 
 # Set up the FastAPI entrypoint
 app = FastAPI()

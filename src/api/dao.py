@@ -14,12 +14,11 @@ class Dto(BaseModel):
     """ Base class for a DTO """
     def to_dict(self, fields: List[str] | None = None):
         if not fields:
-            fields = [k for k in self]
+            fields = self.__fields__
         return {k: getattr(self, k) for k in fields}
 
 class PcrTest(Dto):
     """ Simple DTO for the PCR tests """
-    #TODO: proper validation on the date/email fields
     #TODO: proper enumeration on status and test result fields
     patient_pseudonym: str
     submitter_email: str
@@ -30,8 +29,14 @@ class PcrTest(Dto):
     test_result: str = ''
     test_date: str = ''
 
-
-# TODO: write a dto for updating the pcr with test results
+class UpdatePcrTest(Dto):
+    """ Update DTO for PcrTest """
+    #TODO: proper validation on the date fields
+    #TODO: proper enumeration on status and test result fields
+    access_token: str
+    status: str = ''
+    test_result: str = ''
+    test_date: str = ''
 
 
 class Dao(Protocol):
@@ -96,9 +101,8 @@ class MongoDao:
 
     def update_one(
         self,
-        filter: Mapping[str, Any],
-        updates: Mapping[str, Any],
-        upsert: bool = False,
+        filters: Mapping[str, Any],
+        replacement: Dto
     ):
         """ Update given item """
         """ 
@@ -106,8 +110,9 @@ class MongoDao:
         which would remove the need for the 'updates' mapping wrapper,
         but it still doesn't allow any kind of dynamic update (which is fine).
         """
-        updates = {"$set": updates}
-        self.collection.update_one(filter, updates, upsert)
+        replacement_doc = self._dto_to_document(replacement)
+        self.collection.find_one_and_replace(filters, replacement_doc)
+        return self._document_to_dto(self.collection.find_one(filters))
 
     def delete_one(self, filters: Mapping[str, Any]):
         """Delete an item"""
