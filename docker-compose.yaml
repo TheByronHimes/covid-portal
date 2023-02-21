@@ -43,13 +43,20 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: nc -z localhost 9092 || exit -1
+      start_period: 15s
+      interval: 5s
+      timeout: 10s
+      retries: 10
 
-  app:
+  backend:
     build: .
     links:
       # see if you can delete this
       - mongodb
-    container_name: app
+    container_name: backend
+    restart: on-failure
     env_file:
       - ".env"
     environment:
@@ -62,7 +69,11 @@ services:
       - .:/app:consistent
       - ./static:/app/static:consistent
     depends_on:
-      - mongodb
-      - frontend
-      - broker
-      - zookeeper
+      zookeeper:
+        condition: service_started
+      mongodb:
+        condition: service_started
+      frontend:
+        condition: service_started
+      broker:
+        condition: service_healthy

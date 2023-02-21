@@ -1,29 +1,61 @@
+"""
+Desc: Module that handles the main API functionality.
+Contents:
+    - findSample()
+    - updateSample()
+    - get_sample()
+    - post_sample()
+    - update_sample()
+"""
+
 import secrets
 import os
 from typing import Dict
 from fastapi import APIRouter
 from pymongo import MongoClient
-from .deps import make_access_token
-from .dao import PcrTest, MongoDao
+from .deps import make_access_token, sample_id
+from .dao import PcrTest, UpdatePcrTest, MongoDao
+from .kafkaservice import KafkaService
 
 # Import DB Username & Password from container env vars
 DB_USERNAME = os.environ["db_username"]
 DB_PASSWORD = os.environ["db_password"]
 
+# TODO: move this to a proper config file or something
+TOPIC_NAME = 'nutopic'
+BOOTSTRAP_SERVERS = ['broker:29092']
+CLIENT_ID = 'client1'
+
 # Create connection to DB
 client = MongoClient(
     host="mongodb://db:27017", username=DB_USERNAME, password=DB_PASSWORD
 )
-
-sample_router = APIRouter()
 mdao = MongoDao(PcrTest, client['db']['samples'], '_id')
 
-def findSample(access_token: str) -> Dict:
+
+# Set up kafka service (currently only able to produce)
+ks = KafkaService(BOOTSTRAP_SERVERS, CLIENT_ID)
+ks.add_new_topic(TOPIC_NAME)
+#x = ks.produce_simple_message(TOPIC_NAME, 'test message')
+
+#consumer = KafkaConsumer(group_id=None, bootstrap_servers=BOOTSTRAP_SERVERS, auto_offset_reset='earliest')#,request_timeout_ms=5000, session_timeout_ms=3000)
+#consumer.subscribe(topics=[TOPIC_NAME]) 
+
+
+# Helper functions that might get moved or replaced by something else.
+def findSample(access_token: str) -> PcrTest:
     return mdao.find_one({'access_token': access_token})
 
-def updateSample(*args):
-    raise NotImplementedError
+def updateSample(access_token: str, new_data: PcrTest) -> PcrTest:
+    result = mdao.update_one(
+        {'access_token': access_token},
+        new_data
+    )
+    return result
 
+
+# Establish routes
+sample_router = APIRouter()
 @sample_router.get('/sample/{access_token}', status_code=200)
 def get_sample(access_token: str):
     """ 
@@ -41,9 +73,6 @@ def get_sample(access_token: str):
         'test_result',
         'test_date'
     ])
-    #data_to_return, status_code = findSample(access_token)
-    # TODO: get rid of the approach where we call some other function
-    # TODO: replace w/ DAO/DTO pattern approach
     return data_to_return
 
 
@@ -67,8 +96,8 @@ def post_sample(data: PcrTest):
     return data_to_return
 
 
-@sample_router.patch('/sample', status_code=204)
-def update_sample():
+@sample_router.patch('/sample', status_code=201)
+def update_sample(data: UpdatePcrTest):
     """
     Update a test sample with results.
     Handle PATCH req: 
@@ -76,11 +105,11 @@ def update_sample():
         2. Update sample 
         3. Return updated sample
     """
-    raise NotImplementedError
-    data_to_return = updateSample(
-        req['access_token'],
-        req['status'],
-        req['test_result'],
-        req['test_date']
-    )
-    return data_to_return
+    sample = findSample(data.access_token)
+    sample.status = data.status
+    sample.test_result = data.test_result
+    sample.test_date = data.test_date
+
+    result = updateSample(data.access_token, sample)
+    
+    return result.to_dict()
