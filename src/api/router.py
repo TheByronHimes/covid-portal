@@ -1,23 +1,48 @@
+"""
+Desc: Module that handles the main API functionality.
+Contents:
+    - findSample()
+    - updateSample()
+    - get_sample()
+    - post_sample()
+    - update_sample()
+"""
+
 import secrets
 import os
 from typing import Dict
 from fastapi import APIRouter
 from pymongo import MongoClient
-from .deps import make_access_token
+from .deps import make_access_token, sample_id
 from .dao import PcrTest, UpdatePcrTest, MongoDao
+from .kafkaservice import KafkaService
 
 # Import DB Username & Password from container env vars
 DB_USERNAME = os.environ["db_username"]
 DB_PASSWORD = os.environ["db_password"]
 
+# TODO: move this to a proper config file or something
+TOPIC_NAME = 'nutopic'
+BOOTSTRAP_SERVERS = ['broker:29092']
+CLIENT_ID = 'client1'
+
 # Create connection to DB
 client = MongoClient(
     host="mongodb://db:27017", username=DB_USERNAME, password=DB_PASSWORD
 )
-
-sample_router = APIRouter()
 mdao = MongoDao(PcrTest, client['db']['samples'], '_id')
 
+
+# Set up kafka service (currently only able to produce)
+ks = KafkaService(BOOTSTRAP_SERVERS, CLIENT_ID)
+ks.add_new_topic(TOPIC_NAME)
+#x = ks.produce_simple_message(TOPIC_NAME, 'test message')
+
+#consumer = KafkaConsumer(group_id=None, bootstrap_servers=BOOTSTRAP_SERVERS, auto_offset_reset='earliest')#,request_timeout_ms=5000, session_timeout_ms=3000)
+#consumer.subscribe(topics=[TOPIC_NAME]) 
+
+
+# Helper functions that might get moved or replaced by something else.
 def findSample(access_token: str) -> PcrTest:
     return mdao.find_one({'access_token': access_token})
 
@@ -28,6 +53,9 @@ def updateSample(access_token: str, new_data: PcrTest) -> PcrTest:
     )
     return result
 
+
+# Establish routes
+sample_router = APIRouter()
 @sample_router.get('/sample/{access_token}', status_code=200)
 def get_sample(access_token: str):
     """ 

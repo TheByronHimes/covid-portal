@@ -6,6 +6,9 @@ Contents:
 
 """
 
+# TODO: Proper type-hinting
+# TODO: write tests for existing and future code
+
 from typing import Protocol, Mapping, Any, List, Type
 from pydantic import BaseModel
 
@@ -28,6 +31,9 @@ class PcrTest(Dto):
     status: str = ''
     test_result: str = ''
     test_date: str = ''
+
+    class Config:
+        validate_assignment = True
 
 class UpdatePcrTest(Dto):
     """ Update DTO for PcrTest """
